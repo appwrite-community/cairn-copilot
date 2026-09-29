@@ -1,0 +1,17 @@
+# Dependencies and build output
+node_modules
+dist
+*.tsbuildinfo
+
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+
+# Appwrite CLI state
+.appwrite
+
+# Editors and OS files
+.DS_Store
+.vscode
+.idea
