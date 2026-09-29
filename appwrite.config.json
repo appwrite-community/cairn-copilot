@@ -1,21 +1,26 @@
 {
-  "projectId": "cairn",
-  "projectName": "Cairn",
-  "endpoint": "https://fra.cloud.appwrite.io/v1",
-  "functions": [
-    {
-      "$id": "copilot",
-      "name": "copilot",
-      "runtime": "node-22",
-      "execute": ["team:workspace"],
-      "enabled": true,
-      "logging": true,
-      "timeout": 180,
-      "entrypoint": "src/main.js",
-      "commands": "npm install",
-      "path": "functions/copilot",
-      "scopes": [],
-      "ignore": ["node_modules", ".npm"]
-    }
-  ]
+    "projectId": "cairn",
+    "projectName": "Cairn",
+    "endpoint": "https://fra.cloud.appwrite.io/v1",
+    "functions": [
+        {
+            "$id": "copilot",
+            "name": "copilot",
+            "runtime": "node-22",
+            "execute": [
+                "team:workspace"
+            ],
+            "enabled": true,
+            "logging": true,
+            "timeout": 180,
+            "entrypoint": "src/main.js",
+            "commands": "npm install",
+            "path": "functions/copilot",
+            "scopes": [],
+            "ignore": [
+                "node_modules",
+                ".npm"
+            ]
+        }
+    ]
 }

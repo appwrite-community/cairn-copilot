@@ -157,10 +157,14 @@ const TOOLS = {
   list_notes: {
     definition: tool(
       'list_notes',
-      'List notes the user can read, newest first. Filter by account, by words in the note, or both.',
+      'List notes the user can read, newest first. For a question about one account, pass its ID without a query and read the notes.',
       {
         accountId: nullable({ type: 'string', description: 'Only notes on this account.' }),
-        query: nullable({ type: 'string', description: 'Words to search for in the note text.' }),
+        query: nullable({
+          type: 'string',
+          description:
+            'Whole words that appear in the note text, such as a name or product. Use null to read the latest notes.',
+        }),
         limit: { type: 'integer', description: 'How many notes to return, from 1 to 20.' },
       },
     ),
