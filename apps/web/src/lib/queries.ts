@@ -22,11 +22,21 @@ export const accountsQuery = ({ search, health }: AccountFilters) =>
     placeholderData: keepPreviousData,
   });
 
+/**
+ * One account, or null when it doesn't exist or isn't shared with the user.
+ * Appwrite treats both the same. A list query returns an empty result
+ * instead of a 404, so the browser logs no failed request.
+ */
 export const accountQuery = (accountId: string) =>
   queryOptions({
     queryKey: ['accounts', 'detail', accountId],
-    queryFn: () => tablesDB.getRow<Account>({ ...table('accounts'), rowId: accountId }),
-    retry: false,
+    queryFn: async () => {
+      const { rows } = await tablesDB.listRows<Account>({
+        ...table('accounts'),
+        queries: [Query.equal('$id', accountId), Query.limit(1)],
+      });
+      return rows[0] ?? null;
+    },
   });
 
 export const contactsQuery = (accountId: string) =>

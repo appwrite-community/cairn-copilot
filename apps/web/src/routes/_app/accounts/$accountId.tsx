@@ -1,6 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
-import { AppwriteException } from 'appwrite';
 import {
   ArrowLeft,
   Check,
@@ -68,8 +67,7 @@ function AccountPage() {
 
   if (account.isPending) return <AccountSkeleton />;
   if (!account.data) {
-    const missing = account.error instanceof AppwriteException && account.error.code === 404;
-    return <NotShared failed={!missing} onRetry={() => account.refetch()} />;
+    return <NotShared failed={account.isError} onRetry={() => account.refetch()} />;
   }
   return <AccountView account={account.data} />;
 }
