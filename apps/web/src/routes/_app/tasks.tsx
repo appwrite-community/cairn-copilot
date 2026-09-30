@@ -59,7 +59,7 @@ function Tasks() {
         title="Tasks"
         actions={tasks && <span className="text-xs text-subtle tabular">{open.length} open</span>}
       />
-      <PageBody className="max-w-[880px]">
+      <PageBody className="mx-0 max-w-[880px]">
         {!tasks ? (
           <TasksSkeleton />
         ) : (

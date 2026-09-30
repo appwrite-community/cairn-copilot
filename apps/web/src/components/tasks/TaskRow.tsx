@@ -3,7 +3,7 @@ import { Flash } from '@/components/Flash';
 import { ViaScout } from '@/components/shared/Badges';
 import { CalendarDate } from '@/components/shared/DateText';
 import { Checkbox } from '@/components/ui/checkbox';
-import { daysFromToday, describeDue } from '@/lib/dates';
+import { daysFromToday, describeDue, formatDateOnly } from '@/lib/dates';
 import type { Task } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { useToggleTask } from './useToggleTask';
@@ -60,7 +60,7 @@ export function TaskRow({
                     : 'text-muted-foreground',
             )}
           >
-            {describeDue(task.dueDate)}
+            {task.done ? formatDateOnly(task.dueDate) : describeDue(task.dueDate)}
           </CalendarDate>
           {showAccount && task.accountId && task.accountName && (
             <>
