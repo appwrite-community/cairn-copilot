@@ -205,7 +205,10 @@ const TOOLS = {
       accountId: nullable({ type: 'string', description: 'Only tasks for this account.' }),
       includeDone: { type: 'boolean', description: 'Also return completed tasks.' },
     }),
-    label: () => 'Checking your tasks',
+    label: ({ accountId }, names) =>
+      accountId
+        ? `Checking your tasks on ${names.get(accountId) ?? 'an account'}`
+        : 'Checking your tasks',
     async run({ accountId, includeDone }, { tablesDB }) {
       const queries = [Query.orderAsc('dueDate'), Query.limit(25)];
       if (accountId) queries.push(Query.equal('accountId', accountId));
@@ -222,6 +225,7 @@ const TOOLS = {
             accountName: task.accountName,
           })),
         },
+        label: accountId && rows[0] ? `Checking your tasks on ${rows[0].accountName}` : undefined,
         detail: plural(rows.length, 'task'),
         read: rows.map(taskRecord),
       };
@@ -234,7 +238,12 @@ const TOOLS = {
     definition: tool('create_note', 'Add a note to an account.', {
       accountId: { type: 'string', description: 'Account ID from search_records.' },
       body: { type: 'string', description: 'The note text, up to 2000 characters.' },
-      kind: { type: 'string', enum: NOTE_KINDS },
+      kind: {
+        type: 'string',
+        enum: NOTE_KINDS,
+        description:
+          'call, meeting, or email when the note records one. internal for anything else.',
+      },
       visibility: {
         type: 'string',
         enum: VISIBILITIES,

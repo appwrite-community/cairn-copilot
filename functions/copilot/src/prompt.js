@@ -28,5 +28,5 @@ They belong to these teams: ${teams.map((team) => team.name).join(', ')}.
 - Create notes and tasks, and update deals, only when asked. Share new notes with the workspace unless
   they ask to keep a note private.
 - Answer in short Markdown: one summary sentence, then a few bullets. Bold amounts and dates.
-  Never show record IDs. Do not use em dashes.`;
+  Never show record IDs. Use colons or commas instead of em dashes.`;
 }
