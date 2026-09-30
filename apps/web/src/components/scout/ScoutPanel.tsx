@@ -28,13 +28,15 @@ export function ScoutPanel() {
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
-  const [pinned, setPinned] = useState(true);
+  // pinned: the panel follows new content. The Jump to latest pill shows only
+  // after the user scrolled up themselves.
   const pinnedRef = useRef(true);
+  const [showJump, setShowJump] = useState(false);
   const lastScrollTop = useRef(0);
 
-  function setPinnedBoth(value: boolean) {
+  function setPinned(value: boolean) {
     pinnedRef.current = value;
-    setPinned(value);
+    setShowJump(!value);
   }
 
   // Scrolling up stops following; reaching the bottom starts again. Only an upward
@@ -44,8 +46,8 @@ export function ScoutPanel() {
     if (!el) return;
     const scrolledUp = el.scrollTop < lastScrollTop.current;
     lastScrollTop.current = el.scrollTop;
-    if (el.scrollHeight - el.scrollTop - el.clientHeight < 48) setPinnedBoth(true);
-    else if (scrolledUp) setPinnedBoth(false);
+    if (el.scrollHeight - el.scrollTop - el.clientHeight < 48) setPinned(true);
+    else if (scrolledUp) setPinned(false);
   }
 
   function scrollToBottom(behavior: ScrollBehavior) {
@@ -71,9 +73,35 @@ export function ScoutPanel() {
 
   // A different conversation opens at its latest message.
   useLayoutEffect(() => {
-    setPinnedBoth(true);
+    setPinned(true);
     scrollToBottom('auto');
   }, [threadId]);
+
+  // A new question is followed to the bottom. An answer arrives all at once:
+  // when it is taller than the panel, show its beginning, not its end.
+  const lastRun = runs.at(-1);
+  const seen = useRef({ id: lastRun?.id, status: lastRun?.status });
+  useLayoutEffect(() => {
+    const previous = seen.current;
+    seen.current = { id: lastRun?.id, status: lastRun?.status };
+    const el = scrollRef.current;
+    const article = contentRef.current?.querySelector('article:last-of-type');
+    if (!el || !article || !lastRun) return;
+
+    if (lastRun.id !== previous.id) {
+      if (lastRun.status === 'queued') {
+        setPinned(true);
+        scrollToBottom('smooth');
+      }
+      return;
+    }
+
+    const finished = previous.status === 'running' && lastRun.status !== 'running';
+    if (!finished || !pinnedRef.current || article.clientHeight <= el.clientHeight) return;
+    pinnedRef.current = false;
+    el.scrollTop += article.getBoundingClientRect().top - el.getBoundingClientRect().top - 20;
+    lastScrollTop.current = el.scrollTop;
+  }, [lastRun?.id, lastRun?.status]);
 
   return (
     <div className="flex h-full flex-col">
@@ -147,11 +175,11 @@ export function ScoutPanel() {
             )}
           </div>
         </div>
-        {!pinned && runs.length > 0 && (
+        {showJump && runs.length > 0 && (
           <button
             type="button"
             onClick={() => {
-              setPinnedBoth(true);
+              setPinned(true);
               scrollToBottom('smooth');
             }}
             className="absolute bottom-3 left-1/2 flex h-7 -translate-x-1/2 items-center gap-1.5 rounded-full border border-border-strong bg-popover px-3 text-xs font-medium text-muted-foreground shadow-overlay outline-none transition-colors animate-in fade-in-0 slide-in-from-bottom-1 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/60"
