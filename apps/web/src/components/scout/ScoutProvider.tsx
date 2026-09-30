@@ -272,6 +272,12 @@ export function ScoutProvider({ children }: { children: ReactNode }) {
           ),
         );
         if (started.threadId !== startThread) {
+          // A new conversation has no rows to load yet. Start its cache empty, so
+          // Realtime events fill it and no fetch can race them.
+          queryClient.setQueryData<ThreadData>(
+            threadQuery(started.threadId).queryKey,
+            (data) => data ?? { runs: [], steps: [] },
+          );
           selectThread(started.threadId);
           queryClient.invalidateQueries({ queryKey: threadsQuery.queryKey });
         }

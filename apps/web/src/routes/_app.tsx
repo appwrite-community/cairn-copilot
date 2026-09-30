@@ -76,9 +76,10 @@ function SignedOutElsewhere() {
       if (event.key !== sessionHint.key || event.newValue !== null) return;
       void realtime.disconnect();
       // Leave the signed-in layout first, so nothing refetches with the ended session.
-      void navigate({ to: '/sign-in', search: { redirect: window.location.pathname } }).then(() =>
-        queryClient.clear(),
-      );
+      void navigate({
+        to: '/sign-in',
+        search: { redirect: window.location.pathname, ended: true },
+      }).then(() => queryClient.clear());
     }
     window.addEventListener('storage', onStorage);
     return () => window.removeEventListener('storage', onStorage);

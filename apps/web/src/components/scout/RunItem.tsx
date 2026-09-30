@@ -21,7 +21,7 @@ export function RunItem({
   onRetry: (prompt: string, options: AskOptions) => void;
 }) {
   return (
-    <article className="flex flex-col gap-3">
+    <article data-status={run.status} className="flex flex-col gap-3">
       <div className="flex justify-end">
         <p className="max-w-[85%] whitespace-pre-wrap break-words rounded-xl rounded-br-md border border-border-strong bg-raised px-3 py-2 text-[14px] leading-[22px]">
           {run.prompt}

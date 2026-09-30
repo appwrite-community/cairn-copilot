@@ -17,7 +17,10 @@ function onError(err: unknown) {
   sessionHint.clear();
   void realtime.disconnect();
   queryClient.clear();
-  void router.navigate({ to: '/sign-in', search: { redirect: router.state.location.href } });
+  void router.navigate({
+    to: '/sign-in',
+    search: { redirect: router.state.location.href, ended: true },
+  });
 }
 
 const queryClient = new QueryClient({
@@ -31,6 +34,17 @@ const queryClient = new QueryClient({
         count < 2 && !(err instanceof AppwriteException && err.code >= 400 && err.code < 500),
     },
   },
+});
+
+// Realtime reconnects by itself, but it does not replay the events sent while
+// it was offline. Once it is back, refetch what is on screen.
+let realtimeDropped = false;
+realtime.onClose(() => {
+  realtimeDropped = true;
+});
+realtime.onOpen(() => {
+  if (realtimeDropped) void queryClient.invalidateQueries();
+  realtimeDropped = false;
 });
 
 const router = createRouter({

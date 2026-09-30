@@ -46,6 +46,7 @@ export function ThreadHistory() {
                 <li key={thread.$id}>
                   <button
                     type="button"
+                    aria-current={current ? 'true' : undefined}
                     onClick={() => {
                       selectThread(thread.$id);
                       setOpen(false);

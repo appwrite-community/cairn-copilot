@@ -1,7 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router';
 import { AppwriteException } from 'appwrite';
-import { ChevronRight, CircleAlert, LoaderCircle, WifiOff } from 'lucide-react';
+import { ChevronRight, CircleAlert, Info, LoaderCircle, WifiOff } from 'lucide-react';
 import { useRef, useState, type FormEvent } from 'react';
 import { BrandPanel } from '@/components/auth/BrandPanel';
 import { Logo } from '@/components/brand/Logo';
@@ -14,15 +14,21 @@ import { account } from '@/lib/appwrite';
 import { PERSONAS } from '@/lib/personas';
 import { sessionHint, sessionQuery } from '@/lib/session';
 
-type Search = { redirect?: string };
+/** redirect: where to go after signing in. ended: the session ended while the app was open. */
+type Search = { redirect?: string; ended?: true };
 
 export const Route = createFileRoute('/sign-in')({
   validateSearch: (search: Record<string, unknown>): Search => {
     const target = search.redirect;
     // Only same-site paths, never another origin.
-    return typeof target === 'string' && target.startsWith('/') && !target.startsWith('//')
-      ? { redirect: target }
-      : {};
+    const redirect =
+      typeof target === 'string' && target.startsWith('/') && !target.startsWith('//')
+        ? target
+        : undefined;
+    return {
+      ...(redirect && { redirect }),
+      ...(search.ended === true && { ended: true }),
+    };
   },
   beforeLoad: async ({ context, search }) => {
     if (!sessionHint.exists()) return;
@@ -38,7 +44,7 @@ type Problem = 'credentials' | 'network' | 'rate-limit' | null;
 const DEMO_PASSWORD = import.meta.env.VITE_DEMO_PASSWORD;
 
 function SignIn() {
-  const { redirect: target } = Route.useSearch();
+  const { redirect: target, ended } = Route.useSearch();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const passwordRef = useRef<HTMLInputElement>(null);
@@ -123,8 +129,16 @@ function SignIn() {
               />
             </div>
 
-            {problem && (
+            {problem ? (
               <ProblemAlert problem={problem} onRetry={() => signIn({ email, password })} />
+            ) : (
+              ended && (
+                <Alert>
+                  <Info />
+                  Your session ended, for example after signing out in another tab. Sign in to
+                  continue where you left off.
+                </Alert>
+              )
             )}
 
             <Button
