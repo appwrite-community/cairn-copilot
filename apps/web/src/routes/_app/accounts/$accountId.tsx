@@ -58,6 +58,8 @@ export const Route = createFileRoute('/_app/accounts/$accountId')({
       queryClient.ensureQueryData(tasksQuery),
     ]),
   component: AccountPage,
+  // Slow loads show the page with its skeletons; fast ones keep the previous page.
+  pendingComponent: AccountPage,
 });
 
 function AccountPage() {
@@ -121,15 +123,15 @@ function AccountView({ account }: { account: Account }) {
           <>
             <Button
               variant="secondary"
+              aria-label={`Ask Scout about ${account.name}`}
               onClick={() => scout.prefill(`Prep me for my call with ${account.name}`)}
             >
-              <ScoutMark size={16} className="bg-transparent ring-0" />
+              <ScoutMark size={18} />
               <span className="hidden @min-[640px]:inline">Ask Scout about {account.name}</span>
-              <span className="@min-[640px]:hidden">Ask Scout</span>
             </Button>
-            <Button onClick={focusComposer}>
+            <Button onClick={focusComposer} aria-label="Add note">
               <PenLine />
-              Add note
+              <span className="hidden @min-[480px]:inline">Add note</span>
             </Button>
           </>
         }
@@ -160,8 +162,24 @@ function AccountView({ account }: { account: Account }) {
               </div>
             </Card>
 
+            <Card title="Your tasks here">
+              {!accountTasks ? (
+                <div className="p-4">
+                  <Skeleton className="h-9" />
+                </div>
+              ) : accountTasks.length === 0 ? (
+                <p className="px-4 py-4 text-sm text-subtle">No open tasks for this account.</p>
+              ) : (
+                <div className="flex flex-col p-1.5">
+                  {accountTasks.map((task) => (
+                    <TaskRow key={task.$id} task={task} showAccount={false} />
+                  ))}
+                </div>
+              )}
+            </Card>
             <Card
               title="Contacts"
+              className="@min-[560px]:col-span-2 @min-[760px]:col-span-1"
               action={
                 contacts.data && (
                   <span className="text-xs text-subtle tabular">{contacts.data.length}</span>
@@ -185,25 +203,6 @@ function AccountView({ account }: { account: Account }) {
                     <ContactRow key={contact.$id} contact={contact} />
                   ))}
                 </ul>
-              )}
-            </Card>
-
-            <Card
-              title="Your tasks here"
-              className="@min-[560px]:col-span-2 @min-[760px]:col-span-1"
-            >
-              {!accountTasks ? (
-                <div className="p-4">
-                  <Skeleton className="h-9" />
-                </div>
-              ) : accountTasks.length === 0 ? (
-                <p className="px-4 py-4 text-sm text-subtle">No open tasks for this account.</p>
-              ) : (
-                <div className="flex flex-col p-1.5">
-                  {accountTasks.map((task) => (
-                    <TaskRow key={task.$id} task={task} showAccount={false} />
-                  ))}
-                </div>
               )}
             </Card>
           </aside>

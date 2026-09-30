@@ -38,6 +38,8 @@ export const Route = createFileRoute('/_app/accounts/')({
       queryClient.ensureQueryData(recentNotesQuery),
     ]).catch(() => undefined),
   component: Accounts,
+  // Slow loads show the page with its skeletons; fast ones keep the previous page.
+  pendingComponent: Accounts,
 });
 
 function Accounts() {
@@ -122,16 +124,18 @@ function Accounts() {
 
         <div className="mt-4 overflow-hidden rounded-xl border border-border bg-surface">
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[860px] text-sm">
+            <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border text-left text-xs text-subtle">
                   <th className="h-10 px-4 font-medium">Account</th>
-                  <th className="h-10 px-3 font-medium">Owner</th>
-                  <th className="h-10 px-3 font-medium">Segment</th>
+                  <th className="hidden h-10 px-3 font-medium @min-[720px]:table-cell">Owner</th>
+                  <th className="hidden h-10 px-3 font-medium @min-[1000px]:table-cell">Segment</th>
                   <th className="h-10 px-3 font-medium">Health</th>
-                  <th className="h-10 px-3 text-right font-medium">ARR</th>
-                  <th className="h-10 px-3 font-medium">Renewal</th>
-                  <th className="h-10 px-4 text-right font-medium">Last note</th>
+                  <th className="hidden h-10 px-3 text-right font-medium @min-[480px]:table-cell">ARR</th>
+                  <th className="hidden h-10 px-3 font-medium @min-[600px]:table-cell">Renewal</th>
+                  <th className="hidden h-10 px-4 text-right font-medium @min-[860px]:table-cell">
+                    Last note
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -165,33 +169,33 @@ function Accounts() {
                           </div>
                         </div>
                       </td>
-                      <td className="px-3 py-2.5">
+                      <td className="hidden px-3 py-2.5 @min-[720px]:table-cell">
                         <span className="flex items-center gap-2 whitespace-nowrap text-muted-foreground">
                           <Avatar name={account.ownerName} size="xs" />
                           {account.ownerName}
                         </span>
                       </td>
-                      <td className="whitespace-nowrap px-3 py-2.5 text-muted-foreground">
+                      <td className="hidden whitespace-nowrap px-3 py-2.5 text-muted-foreground @min-[1000px]:table-cell">
                         {SEGMENT_LABELS[account.segment]}
                       </td>
                       <td className="px-3 py-2.5">
                         <HealthBadge health={account.health} />
                       </td>
-                      <td className="whitespace-nowrap px-3 py-2.5 text-right tabular">
+                      <td className="hidden whitespace-nowrap px-3 py-2.5 text-right tabular @min-[480px]:table-cell">
                         {account.lifecycle === 'prospect' ? (
                           <span className="text-subtle">Prospect</span>
                         ) : (
                           formatCurrency(account.arr)
                         )}
                       </td>
-                      <td className="px-3 py-2.5 text-muted-foreground tabular">
+                      <td className="hidden px-3 py-2.5 text-muted-foreground tabular @min-[600px]:table-cell">
                         {account.renewalDate ? (
                           <CalendarDate iso={account.renewalDate} />
                         ) : (
                           <span className="text-subtle">-</span>
                         )}
                       </td>
-                      <td className="px-4 py-2.5 text-right text-muted-foreground">
+                      <td className="hidden px-4 py-2.5 text-right text-muted-foreground @min-[860px]:table-cell">
                         {lastNoteAt.get(account.$id) ? (
                           <RelativeTime iso={lastNoteAt.get(account.$id)!} />
                         ) : (
@@ -250,22 +254,22 @@ function SkeletonRows() {
           </div>
         </div>
       </td>
-      <td className="px-3">
+      <td className="hidden px-3 @min-[720px]:table-cell">
         <Skeleton className="h-3.5 w-24" />
       </td>
-      <td className="px-3">
+      <td className="hidden px-3 @min-[1000px]:table-cell">
         <Skeleton className="h-3.5 w-16" />
       </td>
       <td className="px-3">
         <Skeleton className="h-5 w-16" />
       </td>
-      <td className="px-3">
+      <td className="hidden px-3 @min-[480px]:table-cell">
         <Skeleton className="ml-auto h-3.5 w-16" />
       </td>
-      <td className="px-3">
+      <td className="hidden px-3 @min-[600px]:table-cell">
         <Skeleton className="h-3.5 w-14" />
       </td>
-      <td className="px-4">
+      <td className="hidden px-4 @min-[860px]:table-cell">
         <Skeleton className="ml-auto h-3.5 w-12" />
       </td>
     </tr>

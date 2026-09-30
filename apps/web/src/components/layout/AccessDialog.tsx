@@ -40,7 +40,14 @@ export function AccessDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[520px]">
+      <DialogContent
+        className="max-w-[520px]"
+        // Focus the dialog itself, so the close button does not show a focus ring on open.
+        onOpenAutoFocus={(event) => {
+          event.preventDefault();
+          (event.currentTarget as HTMLElement).focus();
+        }}
+      >
         <DialogHeader>
           <DialogTitle>Your access</DialogTitle>
           <DialogDescription>

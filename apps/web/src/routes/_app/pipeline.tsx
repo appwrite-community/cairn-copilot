@@ -34,6 +34,8 @@ export const Route = createFileRoute('/_app/pipeline')({
   loader: ({ context: { queryClient } }) =>
     queryClient.ensureQueryData(dealsQuery).catch(() => undefined),
   component: Pipeline,
+  // Slow loads show the page with its skeletons; fast ones keep the previous page.
+  pendingComponent: Pipeline,
 });
 
 const BOARD: Stage[] = ['discovery', 'proposal', 'negotiation', 'closed_won'];
@@ -82,7 +84,7 @@ function Pipeline() {
           <>
             Pipeline
             {visible && (
-              <span className="font-normal text-subtle tabular">
+              <span className="hidden font-normal text-subtle tabular @min-[560px]:inline">
                 {plural(open.length, 'open deal')} · {formatCompactCurrency(openTotal)}
               </span>
             )}

@@ -22,7 +22,7 @@ export function BrandPanel() {
           </h1>
         </div>
 
-        <div aria-hidden className="relative mb-auto mt-10 h-[300px] max-w-[500px] select-none">
+        <div aria-hidden className="relative mb-auto mt-10 h-[330px] max-w-[500px] select-none">
           <div className="absolute left-0 top-0 w-[330px] rounded-xl border border-border bg-surface p-3.5 shadow-overlay">
             <div className="flex items-center gap-2.5">
               <span className="grid size-8 place-items-center rounded-lg bg-raised text-[11px] font-semibold text-muted-foreground ring-1 ring-inset ring-border-strong">
@@ -50,7 +50,7 @@ export function BrandPanel() {
             </div>
           </div>
 
-          <div className="absolute left-[150px] top-[104px] w-[340px] rounded-xl border border-border-strong bg-surface p-3.5 shadow-overlay">
+          <div className="absolute left-[150px] top-[132px] w-[340px] rounded-xl border border-border-strong bg-surface p-3.5 shadow-overlay">
             <div className="flex items-center gap-2">
               <ScoutMark size={20} />
               <span className="text-sm font-medium">Scout</span>
@@ -78,7 +78,7 @@ export function BrandPanel() {
             </ul>
           </div>
 
-          <div className="absolute left-[40px] top-[252px] flex w-[272px] items-center gap-2 rounded-lg border border-border bg-surface/90 px-3 py-2 text-xs shadow-overlay">
+          <div className="absolute left-[40px] top-[282px] flex w-[300px] items-center gap-2 rounded-lg border border-border bg-surface/90 px-3 py-2 text-xs shadow-overlay">
             <Avatar name="Maya Chen" size="xs" />
             <span className="truncate text-muted-foreground">Ana prefers email over calls.</span>
             <Badge className="ml-auto">

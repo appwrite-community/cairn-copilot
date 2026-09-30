@@ -87,7 +87,7 @@ function SignIn() {
     <div className="grid min-h-dvh bg-background lg:grid-cols-[minmax(0,46fr)_minmax(0,54fr)]">
       <BrandPanel />
 
-      <main className="flex flex-col items-center justify-center px-6 py-10">
+      <main className="flex flex-col items-center justify-center px-6 py-10 lg:justify-start lg:pt-[max(64px,15dvh)]">
         <div className="w-full max-w-[380px]">
           <Logo className="mb-8 lg:hidden" />
           <h1 className="text-xl font-semibold tracking-[-0.015em]">Sign in to Cairn</h1>

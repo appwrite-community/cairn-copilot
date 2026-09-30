@@ -55,6 +55,11 @@ export function ScoutPanel() {
     return () => observer.disconnect();
   }, []);
 
+  // Opening Scout puts the cursor in the composer.
+  useEffect(() => {
+    scout.composerRef.current?.focus({ preventScroll: true });
+  }, [scout.composerRef]);
+
   // A different conversation opens at its latest message.
   useLayoutEffect(() => {
     pinnedRef.current = true;

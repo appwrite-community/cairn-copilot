@@ -7,6 +7,21 @@ export default defineConfig({
   // One .env file at the repository root serves the scripts and the web app.
   // Only variables that start with VITE_ reach the browser.
   envDir: '../..',
-  plugins: [tanstackRouter({ target: 'react', autoCodeSplitting: true }), react(), tailwindcss()],
+  plugins: [
+    tanstackRouter({
+      target: 'react',
+      autoCodeSplitting: true,
+      // Pages render their own skeletons as the pending UI, so both share one chunk.
+      codeSplittingOptions: {
+        defaultBehavior: [
+          ['component', 'pendingComponent'],
+          ['errorComponent'],
+          ['notFoundComponent'],
+        ],
+      },
+    }),
+    react(),
+    tailwindcss(),
+  ],
   resolve: { tsconfigPaths: true },
 });

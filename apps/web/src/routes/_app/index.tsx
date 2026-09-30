@@ -29,6 +29,8 @@ export const Route = createFileRoute('/_app/')({
       queryClient.ensureQueryData(allAccounts),
     ]).catch(() => undefined),
   component: Today,
+  // Slow loads show the page with its skeletons; fast ones keep the previous page.
+  pendingComponent: Today,
 });
 
 function Today() {
@@ -131,7 +133,7 @@ function Stat({
             <Lock className="size-4 text-subtle" />
             Sales team only
           </p>
-          <p className="mt-1 text-xs text-subtle">Deals are shared with Sales</p>
+          <p className="mt-1 text-xs text-subtle">Shared with Sales</p>
         </div>
       ) : (
         <div className="mt-2">{children}</div>

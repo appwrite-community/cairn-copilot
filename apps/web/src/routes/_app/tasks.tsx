@@ -20,6 +20,8 @@ export const Route = createFileRoute('/_app/tasks')({
   loader: ({ context: { queryClient } }) =>
     queryClient.ensureQueryData(tasksQuery).catch(() => undefined),
   component: Tasks,
+  // Slow loads show the page with its skeletons; fast ones keep the previous page.
+  pendingComponent: Tasks,
 });
 
 const GROUPS = [

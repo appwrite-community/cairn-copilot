@@ -135,7 +135,13 @@ function Shell() {
         )
       ) : (
         <Sheet open={scout.open} onOpenChange={scout.setOpen}>
-          <SheetContent side="right" showClose={false} className="w-full p-0 sm:max-w-[440px]">
+          <SheetContent
+            side="right"
+            showClose={false}
+            className="w-full p-0 sm:max-w-[440px]"
+            // The panel focuses its composer itself.
+            onOpenAutoFocus={(event) => event.preventDefault()}
+          >
             <SheetTitle className="sr-only">Scout</SheetTitle>
             <SheetDescription className="sr-only">Ask Scout about your accounts.</SheetDescription>
             <ScoutPanel />
