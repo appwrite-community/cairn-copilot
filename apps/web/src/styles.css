@@ -1,0 +1,169 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import '@fontsource-variable/geist';
+@import '@fontsource-variable/geist-mono';
+
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+  --font-sans: 'Geist Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'Geist Mono Variable', ui-monospace, SFMono-Regular, monospace;
+
+  /* Type scale: 12 meta, 13 tables, 14 body, 16 section, 20 page, 24 greeting, 30 hero */
+  --text-xs: 12px;
+  --text-xs--line-height: 16px;
+  --text-sm: 13px;
+  --text-sm--line-height: 20px;
+  --text-base: 14px;
+  --text-base--line-height: 22px;
+  --text-lg: 16px;
+  --text-lg--line-height: 24px;
+  --text-xl: 20px;
+  --text-xl--line-height: 28px;
+  --text-2xl: 24px;
+  --text-2xl--line-height: 32px;
+  --text-3xl: 30px;
+  --text-3xl--line-height: 36px;
+
+  /* Surfaces */
+  --color-background: #0b0b0d;
+  --color-sidebar: #0f0f12;
+  --color-surface: #141418;
+  --color-raised: #1b1b20;
+  --color-card: #141418;
+  --color-popover: #16161b;
+
+  /* Lines */
+  --color-border: #25252c;
+  --color-border-strong: #33333c;
+  --color-input: #25252c;
+
+  /* Text */
+  --color-foreground: #ededf0;
+  --color-muted-foreground: #a1a1ac;
+  --color-subtle: #888893;
+
+  /* Cairn Blue, the one accent */
+  --color-primary: #7fa7ff;
+  --color-primary-hover: #98b8ff;
+  --color-primary-foreground: #0b0b0d;
+  --color-ring: #7fa7ff;
+
+  /* Hover and selected surfaces (shadcn naming) */
+  --color-accent: #1b1b20;
+  --color-accent-foreground: #ededf0;
+  --color-muted: #1b1b20;
+  --color-secondary: #1b1b20;
+  --color-secondary-foreground: #ededf0;
+
+  /* Status */
+  --color-success: #4ade9a;
+  --color-warning: #f5b544;
+  --color-danger: #ff6b6b;
+  --color-destructive: #ff6b6b;
+  --color-violet: #b79cff;
+
+  --shadow-overlay: 0 16px 40px -12px rgb(0 0 0 / 0.6), 0 0 0 1px rgb(255 255 255 / 0.02);
+
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+
+  --animate-flash: flash 2s ease-out;
+  --animate-shimmer: shimmer 1.6s linear infinite;
+  --animate-enter: enter 240ms var(--ease-out-quint);
+
+  @keyframes flash {
+    0%,
+    30% {
+      background-color: rgb(127 167 255 / 0.1);
+      box-shadow: inset 0 0 0 1px rgb(127 167 255 / 0.28);
+    }
+    100% {
+      background-color: rgb(127 167 255 / 0);
+      box-shadow: inset 0 0 0 1px rgb(127 167 255 / 0);
+    }
+  }
+
+  @keyframes shimmer {
+    from {
+      background-position: 200% 0;
+    }
+    to {
+      background-position: -200% 0;
+    }
+  }
+
+  @keyframes enter {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    color-scheme: dark;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-background font-sans text-base text-foreground antialiased;
+    font-feature-settings: 'ss01', 'cv11';
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background-color: rgb(127 167 255 / 0.3);
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #33333c transparent;
+  }
+
+  button:not(:disabled),
+  [role='button']:not(:disabled) {
+    cursor: pointer;
+  }
+}
+
+@layer utilities {
+  /* A line of text with a moving highlight, for "Starting Scout" */
+  .text-shimmer {
+    background-image: linear-gradient(
+      90deg,
+      #888893 0%,
+      #888893 40%,
+      #ededf0 50%,
+      #888893 60%,
+      #888893 100%
+    );
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: var(--animate-shimmer);
+  }
+
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *:not(.animate-spin),
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
