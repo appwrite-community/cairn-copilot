@@ -29,24 +29,26 @@ const TOOLS = {
     ),
     label: ({ query }) => `Searching for "${query}"`,
     async run({ query }, { tablesDB }) {
-      const search = [Query.search('name', query), Query.limit(5)];
-      const [accounts, contacts] = await Promise.all([
+      const search = [Query.search('name', query), Query.limit(25)];
+      const [accountRows, contactRows] = await Promise.all([
         tablesDB.listRows({ ...table('accounts'), queries: search }),
         tablesDB.listRows({ ...table('contacts'), queries: search }),
       ]);
+      const accounts = matchingEveryWord(accountRows.rows, query);
+      const contacts = matchingEveryWord(contactRows.rows, query);
       return {
         forModel: {
-          accounts: accounts.rows.map((a) => ({
+          accounts: accounts.map((a) => ({
             id: a.$id,
             name: a.name,
             industry: a.industry,
             health: a.health,
             owner: a.ownerName,
           })),
-          contacts: contacts.rows.map(contactView),
+          contacts: contacts.map(contactView),
         },
-        detail: counts([accounts.rows.length, 'account'], [contacts.rows.length, 'contact']),
-        read: [...accounts.rows.map(accountRecord), ...contacts.rows.map(contactRecord)],
+        detail: counts([accounts.length, 'account'], [contacts.length, 'contact']),
+        read: [...accounts.map(accountRecord), ...contacts.map(contactRecord)],
       };
     },
   },
@@ -565,6 +567,17 @@ function notesLabel(accountName, query) {
   if (accountName && query) return `Searching notes on ${accountName} for "${query}"`;
   if (accountName) return `Reading notes on ${accountName}`;
   return query ? `Searching notes for "${query}"` : 'Reading recent notes';
+}
+
+/**
+ * Full-text search matches any word of the query, so "Halcyon Health" also
+ * finds "Meridian Health Partners". Keep the rows whose name has every word.
+ */
+function matchingEveryWord(rows, query) {
+  const words = query.toLowerCase().match(/[\p{L}\p{N}_]+/gu) ?? [];
+  return rows
+    .filter((row) => words.every((word) => row.name.toLowerCase().includes(word)))
+    .slice(0, 5);
 }
 
 const plural = (n, noun) => `${n} ${noun}${n === 1 ? '' : 's'}`;
