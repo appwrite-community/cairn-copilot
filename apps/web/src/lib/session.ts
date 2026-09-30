@@ -71,6 +71,7 @@ export function workspaceName(session: Session) {
  */
 const SESSION_HINT = 'cairn:signed-in';
 export const sessionHint = {
+  key: SESSION_HINT,
   exists: () => localStorage.getItem(SESSION_HINT) === 'true',
   set: () => localStorage.setItem(SESSION_HINT, 'true'),
   clear: () => localStorage.removeItem(SESSION_HINT),

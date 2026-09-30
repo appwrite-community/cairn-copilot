@@ -13,7 +13,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { account, realtime } from '@/lib/appwrite';
-import { useSession } from '@/lib/session';
+import { sessionHint, useSession } from '@/lib/session';
 import { cn } from '@/lib/utils';
 import { AccessDialog } from './AccessDialog';
 
@@ -30,9 +30,10 @@ export function UserMenu({ collapsed = false }: { collapsed?: boolean }) {
       toast.error("Couldn't sign out. Check your connection and try again.");
       return;
     }
+    sessionHint.clear();
     await realtime.disconnect();
-    queryClient.clear();
     await navigate({ to: '/sign-in' });
+    queryClient.clear();
   }
 
   return (

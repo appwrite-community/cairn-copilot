@@ -14,73 +14,106 @@ type Source = {
   key: string;
   label: string;
   icon: LucideIcon;
-  /** Opens the account page, or Tasks, with these rows highlighted. */
+  /** Where the chip leads; the rows in `highlight` flash when the page opens. */
+  to: 'account' | 'pipeline' | 'tasks';
   accountId: string | null;
   highlight: string[];
 };
 
+// Up to this many deals get a chip each; more become one "N deals" chip on the pipeline.
+const MAX_DEAL_CHIPS = 3;
+
+type Group = Source & { count: number; noun: string; title: string };
+
+const ORDER: RecordRef['table'][] = ['accounts', 'deals', 'notes', 'contacts', 'tasks'];
+const ICONS = { notes: FileText, contacts: UserRound, tasks: ListChecks };
+const NOUNS = { notes: 'note', contacts: 'contact', tasks: 'task' };
+
 /**
- * Groups the rows Scout read or wrote into chips: one per account and deal,
- * and one per account for its notes and contacts. Every row here is one the
- * user can open, because Scout only reached it with the user's permissions.
+ * Groups the rows Scout read or wrote into chips: one per account and deal, one per account
+ * for its notes and its contacts, and one for tasks. Every row here is one the user can open,
+ * because Scout only reached it with the user's permissions.
  */
 export function groupSources(records: RecordRef[]): Source[] {
+  const sorted = [...records].sort((a, b) => ORDER.indexOf(a.table) - ORDER.indexOf(b.table));
   const accountNames = new Map(
     records.filter((r) => r.table === 'accounts').map((r) => [r.id, r.label]),
   );
-  const sources: Source[] = [];
-  const grouped = new Map<string, Source & { count: number; noun: string }>();
+  const chips: (Source | Group)[] = [];
+  const groups = new Map<string, Group>();
 
-  for (const record of records) {
+  for (const record of sorted) {
     if (record.table === 'accounts') {
-      sources.push({
+      chips.push({
         key: record.id,
         label: record.label,
         icon: Building2,
+        to: 'account',
         accountId: record.id,
         highlight: [],
       });
     } else if (record.table === 'deals') {
-      sources.push({
+      chips.push({
         key: record.id,
         label: `Deal · ${record.label}`,
         icon: Handshake,
+        to: 'account',
         accountId: record.accountId,
-        highlight: [record.id],
-      });
-    } else if (record.table === 'tasks') {
-      sources.push({
-        key: record.id,
-        label: `Task · ${record.label}`,
-        icon: ListChecks,
-        accountId: null,
         highlight: [record.id],
       });
     } else {
-      const key = `${record.table}:${record.accountId}`;
-      const group = grouped.get(key) ?? {
-        key,
-        label: '',
-        icon: record.table === 'notes' ? FileText : UserRound,
-        accountId: record.accountId,
-        highlight: [],
-        count: 0,
-        noun: record.table === 'notes' ? 'note' : 'contact',
-      };
+      // Tasks open the Tasks page, so they form one group across accounts.
+      const accountId = record.table === 'tasks' ? null : record.accountId;
+      const key = `${record.table}:${accountId}`;
+      let group = groups.get(key);
+      if (!group) {
+        group = {
+          key,
+          label: '',
+          icon: ICONS[record.table],
+          to: accountId ? 'account' : 'tasks',
+          accountId,
+          highlight: [],
+          count: 0,
+          noun: NOUNS[record.table],
+          title: record.label,
+        };
+        groups.set(key, group);
+        chips.push(group);
+      }
       group.count += 1;
       group.highlight.push(record.id);
-      grouped.set(key, group);
     }
   }
 
-  const accountsWithGroups = new Set([...grouped.values()].map((g) => g.accountId));
-  for (const group of grouped.values()) {
-    const name = group.accountId ? accountNames.get(group.accountId) : undefined;
-    const count = plural(group.count, group.noun);
-    const label = accountsWithGroups.size > 1 && name ? `${count} · ${name}` : count;
-    sources.push({ ...group, label });
+  const accountsWithGroups = new Set(
+    [...groups.values()].filter((g) => g.accountId).map((g) => g.accountId),
+  );
+  const deals = chips.filter((chip) => chip.icon === Handshake);
+  if (deals.length > MAX_DEAL_CHIPS) {
+    const first = chips.indexOf(deals[0]);
+    const rest = chips.filter((chip) => chip.icon !== Handshake);
+    rest.splice(first, 0, {
+      key: 'deals',
+      label: plural(deals.length, 'deal'),
+      icon: Handshake,
+      to: 'pipeline',
+      accountId: null,
+      highlight: deals.map((deal) => deal.key),
+    });
+    chips.splice(0, chips.length, ...rest);
   }
-  return sources;
+
+  return chips.map((chip) => {
+    if (!('count' in chip)) return chip;
+    const { count, noun, title, ...source } = chip;
+    if (noun === 'task') {
+      return { ...source, label: count === 1 ? `Task · ${title}` : plural(count, noun) };
+    }
+    const name = source.accountId ? accountNames.get(source.accountId) : undefined;
+    const label = plural(count, noun);
+    return { ...source, label: accountsWithGroups.size > 1 && name ? `${label} · ${name}` : label };
+  });
 }
 
 export function Sources({ records }: { records: RecordRef[] }) {
@@ -103,7 +136,7 @@ export function Sources({ records }: { records: RecordRef[] }) {
           );
           return (
             <li key={source.key} className="max-w-full">
-              {source.accountId ? (
+              {source.to === 'account' && source.accountId ? (
                 <Link
                   to="/accounts/$accountId"
                   params={{ accountId: source.accountId }}
@@ -114,7 +147,7 @@ export function Sources({ records }: { records: RecordRef[] }) {
                 </Link>
               ) : (
                 <Link
-                  to="/tasks"
+                  to={source.to === 'pipeline' ? '/pipeline' : '/tasks'}
                   search={{ highlight: source.highlight.join(',') }}
                   className={chip}
                 >

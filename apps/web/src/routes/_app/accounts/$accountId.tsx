@@ -13,7 +13,7 @@ import {
   PenLine,
   Users,
 } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { ScoutMark } from '@/components/brand/ScoutMark';
 import { DealCard } from '@/components/deals/DealCard';
@@ -32,7 +32,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tooltip } from '@/components/ui/tooltip';
 import { formatCurrency, plural, SEGMENT_LABELS } from '@/lib/format';
-import { flash } from '@/lib/highlight';
+import { useHighlightOnArrival } from '@/lib/highlight';
 import { isConfidential } from '@/lib/permissions';
 import {
   accountNotesQuery,
@@ -91,17 +91,11 @@ function AccountView({ account }: { account: Account }) {
 
   // Records opened from Scout's Sources: flash them once the rows are on screen.
   const ready = Boolean(notes.data && contacts.data && deals.data && tasks.data);
-  useEffect(() => {
-    if (!highlight || !ready) return;
-    const ids = highlight.split(',');
-    requestAnimationFrame(() => {
-      ids.forEach(flash);
-      document
-        .querySelector(`[data-row-id="${CSS.escape(ids[0])}"]`)
-        ?.scrollIntoView({ block: 'center', behavior: 'smooth' });
-    });
-    void navigate({ search: {}, replace: true, resetScroll: false });
-  }, [highlight, ready, navigate]);
+  const clearHighlight = useCallback(
+    () => void navigate({ search: {}, replace: true, resetScroll: false }),
+    [navigate],
+  );
+  useHighlightOnArrival(highlight, ready, clearHighlight);
 
   function focusComposer() {
     composerRef.current?.scrollIntoView({ block: 'center', behavior: 'smooth' });

@@ -1,24 +1,36 @@
 import { useQuery } from '@tanstack/react-query';
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { Lock } from 'lucide-react';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { DealSheet } from '@/components/deals/DealSheet';
 import { StageIcon } from '@/components/deals/StageIcon';
 import { Flash } from '@/components/Flash';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { CalendarDate } from '@/components/shared/DateText';
+import { Segmented } from '@/components/shared/Segmented';
 import { Avatar } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Switch } from '@/components/ui/switch';
 import { Tooltip } from '@/components/ui/tooltip';
 import { daysFromToday } from '@/lib/dates';
-import { formatCompactCurrency, formatCurrency, STAGE_LABELS } from '@/lib/format';
+import {
+  formatCompactCurrency,
+  formatCurrency,
+  OPEN_STAGES,
+  plural,
+  STAGE_LABELS,
+} from '@/lib/format';
+import { useHighlightOnArrival } from '@/lib/highlight';
 import { dealsQuery } from '@/lib/queries';
 import { inTeam, useSession } from '@/lib/session';
 import type { Deal, Stage } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
+type Search = { highlight?: string };
+
 export const Route = createFileRoute('/_app/pipeline')({
+  validateSearch: (search: Record<string, unknown>): Search =>
+    typeof search.highlight === 'string' ? { highlight: search.highlight } : {},
   loader: ({ context: { queryClient } }) =>
     queryClient.ensureQueryData(dealsQuery).catch(() => undefined),
   component: Pipeline,
@@ -30,7 +42,15 @@ function Pipeline() {
   const session = useSession();
   const deals = useQuery(dealsQuery);
   const [showLost, setShowLost] = useState(false);
+  const [owner, setOwner] = useState<'everyone' | 'mine'>('everyone');
   const [openDealId, setOpenDealId] = useState<string | null>(null);
+  const { highlight } = Route.useSearch();
+  const navigate = useNavigate({ from: Route.fullPath });
+  const clearHighlight = useCallback(
+    () => void navigate({ search: {}, replace: true, resetScroll: false }),
+    [navigate],
+  );
+  useHighlightOnArrival(highlight, Boolean(deals.data), clearHighlight);
 
   // Deals are shared with the Sales team. Appwrite returns no rows to anyone
   // else, so the page explains why instead of showing an empty board.
@@ -48,26 +68,51 @@ function Pipeline() {
   }
 
   const stages = showLost ? [...BOARD, 'closed_lost' as const] : BOARD;
+  const visible = deals.data?.filter(
+    (deal) => owner === 'everyone' || deal.ownerId === session.user.$id,
+  );
+  const open = visible?.filter((deal) => OPEN_STAGES.includes(deal.stage)) ?? [];
+  const openTotal = open.reduce((sum, deal) => sum + deal.amount, 0);
   const openDeal = deals.data?.find((deal) => deal.$id === openDealId) ?? null;
 
   return (
     <>
       <PageHeader
-        title="Pipeline"
+        title={
+          <>
+            Pipeline
+            {visible && (
+              <span className="font-normal text-subtle tabular">
+                {plural(open.length, 'open deal')} · {formatCompactCurrency(openTotal)}
+              </span>
+            )}
+          </>
+        }
         actions={
-          <label className="flex cursor-pointer items-center gap-2 text-xs text-muted-foreground">
-            <Switch checked={showLost} onCheckedChange={setShowLost} />
-            Show closed lost
-          </label>
+          <>
+            <Segmented
+              label="Owner"
+              value={owner}
+              onChange={setOwner}
+              options={[
+                { value: 'everyone', label: 'Everyone' },
+                { value: 'mine', label: 'My deals' },
+              ]}
+            />
+            <label className="ml-2 hidden cursor-pointer items-center gap-2 text-xs text-muted-foreground @min-[720px]:flex">
+              <Switch checked={showLost} onCheckedChange={setShowLost} />
+              Closed lost
+            </label>
+          </>
         }
       />
-      <div className="flex gap-3 overflow-x-auto px-6 pb-6 pt-5 @min-[1100px]:px-8">
+      <div className="flex min-h-[calc(100%-3.25rem)] gap-3 overflow-x-auto px-6 pb-6 pt-5 @min-[1100px]:px-8">
         {stages.map((stage) =>
-          deals.data ? (
+          visible ? (
             <Column
               key={stage}
               stage={stage}
-              deals={deals.data.filter((deal) => deal.stage === stage)}
+              deals={visible.filter((deal) => deal.stage === stage)}
               onOpen={(deal) => setOpenDealId(deal.$id)}
             />
           ) : (
@@ -93,7 +138,7 @@ function Column({
   return (
     <section
       aria-label={STAGE_LABELS[stage]}
-      className="flex w-[272px] shrink-0 flex-col rounded-xl border border-border bg-surface/40"
+      className="flex min-w-[248px] flex-1 basis-0 flex-col rounded-xl border border-border bg-surface/40"
     >
       <header className="flex h-11 items-center gap-2 px-3">
         <StageIcon stage={stage} />
@@ -165,7 +210,7 @@ function DealTile({ deal, onOpen }: { deal: Deal; onOpen: () => void }) {
 function ColumnSkeleton() {
   return (
     <div
-      className="flex w-[272px] shrink-0 flex-col gap-2 rounded-xl border border-border bg-surface/40 p-2"
+      className="flex min-w-[248px] flex-1 basis-0 flex-col gap-2 rounded-xl border border-border bg-surface/40 p-2"
       aria-hidden
     >
       <Skeleton className="m-1 h-5 w-32" />

@@ -1,13 +1,13 @@
 import { useQuery } from '@tanstack/react-query';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { ChevronRight, CircleCheck } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { PageBody, PageHeader } from '@/components/layout/PageHeader';
 import { Empty } from '@/components/shared/Card';
 import { TaskRow } from '@/components/tasks/TaskRow';
 import { Skeleton } from '@/components/ui/skeleton';
 import { daysFromToday } from '@/lib/dates';
-import { flash } from '@/lib/highlight';
+import { useHighlightOnArrival } from '@/lib/highlight';
 import { tasksQuery } from '@/lib/queries';
 import type { Task } from '@/lib/types';
 import { cn } from '@/lib/utils';
@@ -35,18 +35,18 @@ function Tasks() {
   const navigate = useNavigate({ from: Route.fullPath });
   const [showDone, setShowDone] = useState(false);
 
+  // A completed task opened from Scout's Sources: show the Completed group first.
+  const highlightsDone = Boolean(
+    highlight && tasks?.some((task) => task.done && highlight.split(',').includes(task.$id)),
+  );
   useEffect(() => {
-    if (!highlight || !tasks) return;
-    const ids = highlight.split(',');
-    if (tasks.some((task) => ids.includes(task.$id) && task.done)) setShowDone(true);
-    requestAnimationFrame(() => {
-      ids.forEach(flash);
-      document
-        .querySelector(`[data-row-id="${CSS.escape(ids[0])}"]`)
-        ?.scrollIntoView({ block: 'center', behavior: 'smooth' });
-    });
-    void navigate({ search: {}, replace: true, resetScroll: false });
-  }, [highlight, tasks, navigate]);
+    if (highlightsDone) setShowDone(true);
+  }, [highlightsDone]);
+  const clearHighlight = useCallback(
+    () => void navigate({ search: {}, replace: true, resetScroll: false }),
+    [navigate],
+  );
+  useHighlightOnArrival(highlight, Boolean(tasks) && (!highlightsDone || showDone), clearHighlight);
 
   const open = tasks?.filter((task) => !task.done) ?? [];
   const done = tasks?.filter((task) => task.done) ?? [];

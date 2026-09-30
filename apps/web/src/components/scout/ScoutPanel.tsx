@@ -120,7 +120,7 @@ export function ScoutPanel() {
 
       <div className="relative min-h-0 flex-1">
         <div ref={scrollRef} onScroll={onScroll} className="h-full overflow-y-auto">
-          <div ref={contentRef} className="min-h-full">
+          <div ref={contentRef} className="flex min-h-full flex-col">
             {loadingThread ? (
               <ThreadSkeleton />
             ) : runs.length === 0 ? (

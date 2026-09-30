@@ -1,4 +1,4 @@
-import { Check, Lock, Users } from 'lucide-react';
+import { Check, Lock, ShieldCheck } from 'lucide-react';
 import { Logo } from '@/components/brand/Logo';
 import { ScoutMark } from '@/components/brand/ScoutMark';
 import { Avatar } from '@/components/ui/avatar';
@@ -22,7 +22,7 @@ export function BrandPanel() {
           </h1>
         </div>
 
-        <div aria-hidden className="relative mt-10 mb-auto h-[250px] max-w-[500px] select-none">
+        <div aria-hidden className="relative mb-auto mt-10 h-[300px] max-w-[500px] select-none">
           <div className="absolute left-0 top-0 w-[330px] rounded-xl border border-border bg-surface p-3.5 shadow-overlay">
             <div className="flex items-center gap-2.5">
               <span className="grid size-8 place-items-center rounded-lg bg-raised text-[11px] font-semibold text-muted-foreground ring-1 ring-inset ring-border-strong">
@@ -50,12 +50,12 @@ export function BrandPanel() {
             </div>
           </div>
 
-          <div className="absolute left-[150px] top-[112px] w-[340px] rounded-xl border border-border-strong bg-surface p-3.5 shadow-overlay">
+          <div className="absolute left-[150px] top-[104px] w-[340px] rounded-xl border border-border-strong bg-surface p-3.5 shadow-overlay">
             <div className="flex items-center gap-2">
               <ScoutMark size={20} />
               <span className="text-sm font-medium">Scout</span>
               <span className="ml-auto flex items-center gap-1 text-xs text-subtle">
-                <Users className="size-3" />
+                <ShieldCheck className="size-3 text-primary" />
                 Acting as Maya Chen
               </span>
             </div>
@@ -78,7 +78,7 @@ export function BrandPanel() {
             </ul>
           </div>
 
-          <div className="absolute left-[36px] top-[196px] flex w-[250px] items-center gap-2 rounded-lg border border-border bg-surface/90 px-3 py-2 text-xs shadow-overlay">
+          <div className="absolute left-[40px] top-[252px] flex w-[272px] items-center gap-2 rounded-lg border border-border bg-surface/90 px-3 py-2 text-xs shadow-overlay">
             <Avatar name="Maya Chen" size="xs" />
             <span className="truncate text-muted-foreground">Ana prefers email over calls.</span>
             <Badge className="ml-auto">

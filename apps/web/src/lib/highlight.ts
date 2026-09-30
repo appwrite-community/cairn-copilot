@@ -1,4 +1,4 @@
-import { useSyncExternalStore } from 'react';
+import { useEffect, useSyncExternalStore } from 'react';
 
 /**
  * Rows that just changed get a short accent flash: Realtime changes made by
@@ -30,4 +30,26 @@ function subscribe(listener: () => void) {
 /** A number that changes each time the row flashes; 0 when it never did. */
 export function useFlash(rowId: string) {
   return useSyncExternalStore(subscribe, () => tokens.get(rowId) ?? 0);
+}
+
+/**
+ * Flashes the rows named in a `highlight` search param (comma-separated row IDs) once the page
+ * has rendered them, scrolls to the first one, then clears the param.
+ */
+export function useHighlightOnArrival(
+  highlight: string | undefined,
+  ready: boolean,
+  clear: () => void,
+) {
+  useEffect(() => {
+    if (!highlight || !ready) return;
+    const ids = highlight.split(',');
+    requestAnimationFrame(() => {
+      ids.forEach(flash);
+      document
+        .querySelector(`[data-row-id="${CSS.escape(ids[0])}"]`)
+        ?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    });
+    clear();
+  }, [highlight, ready, clear]);
 }

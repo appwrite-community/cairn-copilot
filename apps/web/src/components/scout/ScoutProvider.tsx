@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { AppwriteException } from 'appwrite';
+import { AppwriteException, Query, type Models } from 'appwrite';
 import {
   createContext,
   useCallback,
@@ -27,9 +27,21 @@ export type RunView = {
   run: Run | null;
   steps: Step[];
   error: string | null;
+  /** False when the function never recorded the run, so nothing ran. */
+  started: boolean;
+  /** Try again in a new conversation, because this one can no longer be used. */
+  retryInNewThread: boolean;
 };
 
-type PendingRun = { id: string; threadId: string | null; prompt: string; error: string | null };
+export type AskOptions = { newThread?: boolean };
+
+type PendingRun = {
+  id: string;
+  threadId: string | null;
+  prompt: string;
+  error: string | null;
+  threadGone: boolean;
+};
 
 type ScoutContextValue = {
   open: boolean;
@@ -41,13 +53,16 @@ type ScoutContextValue = {
   busy: boolean;
   draft: string;
   setDraft: (text: string) => void;
-  ask: (prompt: string) => void;
+  ask: (prompt: string, options?: AskOptions) => void;
   /** Opens the panel with text in the composer, without sending it. */
   prefill: (prompt: string) => void;
   composerRef: React.RefObject<HTMLTextAreaElement | null>;
 };
 
 const ScoutContext = createContext<ScoutContextValue | null>(null);
+
+// Placeholder IDs for runs whose execution is still being created.
+let localRunCount = 0;
 
 // A run cannot outlive the execution JWT: function timeout (180 s) plus 60 s.
 const RUN_LIFETIME_MS = 240_000;
@@ -112,21 +127,36 @@ export function ScoutProvider({ children }: { children: ReactNode }) {
 
   /** The execution finished. If its run is still "running" a second later, the run stopped early. */
   const recheck = useCallback(
-    (runId: string) => {
+    (execution: Models.Execution) => {
+      const runId = execution.$id;
       setTimeout(async () => {
-        try {
-          const run = await tablesDB.getRow<Run>({ ...table('runs'), rowId: runId });
+        // A list query, so a run that was never written is an empty result, not an error.
+        const { rows } = await tablesDB
+          .listRows<Run>({ ...table('runs'), queries: [Query.equal('$id', runId), Query.limit(1)] })
+          .catch(() => ({ rows: null }));
+        if (!rows) return;
+        const [run] = rows;
+        if (run) {
           upsertRun(run);
           if (run.status === 'running') markInterrupted(runId);
-        } catch (err) {
-          if (err instanceof AppwriteException && err.code === 404) {
-            setPending((list) =>
-              list.map((p) =>
-                p.id === runId ? { ...p, error: "Scout couldn't start this request." } : p,
-              ),
-            );
-          }
+          return;
         }
+        // The function answered before it recorded the run: 401 without a session,
+        // 400 when the conversation is gone. Async executions keep no response body.
+        const sessionEnded = execution.responseStatusCode === 401;
+        setPending((list) =>
+          list.map((p) =>
+            p.id === runId
+              ? {
+                  ...p,
+                  error: sessionEnded
+                    ? 'Your session ended before Scout started. Sign in again, then try again.'
+                    : 'This conversation is no longer available. Try again in a new one.',
+                  threadGone: !sessionEnded,
+                }
+              : p,
+          ),
+        );
       }, RECHECK_DELAY_MS);
     },
     [markInterrupted, upsertRun],
@@ -149,7 +179,7 @@ export function ScoutProvider({ children }: { children: ReactNode }) {
         onExecution: (execution) => {
           if (execution.resourceId !== SCOUT_FUNCTION_ID) return;
           if (execution.status === 'completed' || execution.status === 'failed') {
-            recheck(execution.$id);
+            recheck(execution);
           }
         },
       }),
@@ -201,6 +231,8 @@ export function ScoutProvider({ children }: { children: ReactNode }) {
         .sort((a, b) => a.position - b.position),
       status: run.status === 'running' && interrupted.has(run.$id) ? 'interrupted' : run.status,
       error: run.error,
+      started: true,
+      retryInNewThread: false,
     }));
     const known = new Set(views.map((v) => v.id));
     for (const p of pending) {
@@ -212,6 +244,8 @@ export function ScoutProvider({ children }: { children: ReactNode }) {
         steps: [],
         status: p.error ? 'failed' : 'queued',
         error: p.error,
+        started: false,
+        retryInNewThread: p.threadGone,
       });
     }
     return views;
@@ -220,10 +254,14 @@ export function ScoutProvider({ children }: { children: ReactNode }) {
   const busy = runs.some((r) => r.status === 'queued' || r.status === 'running');
 
   const ask = useCallback(
-    async (prompt: string) => {
-      const localId = `local-${crypto.randomUUID()}`;
-      const startThread = threadId;
-      setPending((list) => [...list, { id: localId, threadId: startThread, prompt, error: null }]);
+    async (prompt: string, options: AskOptions = {}) => {
+      const localId = `local-${++localRunCount}`;
+      const startThread = options.newThread ? null : threadId;
+      if (options.newThread) selectThread(null);
+      setPending((list) => [
+        ...list,
+        { id: localId, threadId: startThread, prompt, error: null, threadGone: false },
+      ]);
       setDraft('');
 
       try {

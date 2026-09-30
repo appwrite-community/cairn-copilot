@@ -1,13 +1,14 @@
 import { useQueryClient } from '@tanstack/react-query';
-import { createFileRoute, Outlet, redirect } from '@tanstack/react-router';
+import { createFileRoute, Outlet, redirect, useNavigate } from '@tanstack/react-router';
 import { Menu } from 'lucide-react';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { LogoMark } from '@/components/brand/Logo';
 import { ScoutMark } from '@/components/brand/ScoutMark';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { ScoutPanel } from '@/components/scout/ScoutPanel';
 import { ScoutProvider, useScout } from '@/components/scout/ScoutProvider';
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from '@/components/ui/sheet';
+import { realtime } from '@/lib/appwrite';
 import { flash } from '@/lib/highlight';
 import { useModShortcut } from '@/lib/keyboard';
 import { subscribeToRecords, useSubscription } from '@/lib/realtime';
@@ -42,6 +43,7 @@ export const Route = createFileRoute('/_app')({
 function AppLayout() {
   return (
     <ScoutProvider>
+      <SignedOutElsewhere />
       <LiveRecords />
       <Shell />
     </ScoutProvider>
@@ -62,6 +64,25 @@ function LiveRecords() {
       }),
     [queryClient],
   );
+  return null;
+}
+
+/** Signing out in another tab ends this session too, so this tab goes to the sign-in page. */
+function SignedOutElsewhere() {
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  useEffect(() => {
+    function onStorage(event: StorageEvent) {
+      if (event.key !== sessionHint.key || event.newValue !== null) return;
+      void realtime.disconnect();
+      // Leave the signed-in layout first, so nothing refetches with the ended session.
+      void navigate({ to: '/sign-in', search: { redirect: window.location.pathname } }).then(() =>
+        queryClient.clear(),
+      );
+    }
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, [queryClient, navigate]);
   return null;
 }
 

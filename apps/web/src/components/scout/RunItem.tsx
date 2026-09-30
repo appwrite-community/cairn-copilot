@@ -8,12 +8,18 @@ import { plural } from '@/lib/format';
 import { parseRecords } from '@/lib/scout';
 import { cn } from '@/lib/utils';
 import { Answer } from './Answer';
-import type { RunView } from './ScoutProvider';
+import type { AskOptions, RunView } from './ScoutProvider';
 import { Sources } from './Sources';
 import { StepList } from './StepList';
 
 /** One question and Scout's work on it: steps, answer, and sources. */
-export function RunItem({ run, onRetry }: { run: RunView; onRetry: (prompt: string) => void }) {
+export function RunItem({
+  run,
+  onRetry,
+}: {
+  run: RunView;
+  onRetry: (prompt: string, options: AskOptions) => void;
+}) {
   return (
     <article className="flex flex-col gap-3">
       <div className="flex justify-end">
@@ -24,7 +30,10 @@ export function RunItem({ run, onRetry }: { run: RunView; onRetry: (prompt: stri
       <div className="flex gap-3">
         <ScoutMark size={24} className="mt-px" />
         <div className="min-w-0 flex-1">
-          <RunBody run={run} onRetry={() => onRetry(run.prompt)} />
+          <RunBody
+            run={run}
+            onRetry={() => onRetry(run.prompt, { newThread: run.retryInNewThread })}
+          />
         </div>
       </div>
     </article>
@@ -70,7 +79,11 @@ function RunBody({ run, onRetry }: { run: RunView; onRetry: () => void }) {
           <Alert tone="danger">
             <CircleAlert />
             <div className="min-w-0 flex-1">
-              <p className="font-medium">Scout couldn't finish this request.</p>
+              <p className="font-medium">
+                {run.started
+                  ? "Scout couldn't finish this request."
+                  : "Scout couldn't start this request."}
+              </p>
               {run.error && <p className="mt-0.5 text-muted-foreground">{run.error}</p>}
               <RetryButton onRetry={onRetry} />
             </div>

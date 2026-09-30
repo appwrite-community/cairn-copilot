@@ -24,7 +24,7 @@ export function SuggestedPrompts() {
   const prompts = inTeam(session, 'sales') ? SALES_PROMPTS : SUCCESS_PROMPTS;
 
   return (
-    <div className="flex min-h-full flex-col justify-end px-5 pb-5 pt-10">
+    <div className="flex flex-1 flex-col justify-end px-5 pb-5 pt-10">
       <ScoutMark size={36} />
       <h2 className="mt-4 text-lg font-semibold tracking-[-0.01em]">Ask about your accounts</h2>
       <p className="mt-1 max-w-[320px] text-sm text-muted-foreground">

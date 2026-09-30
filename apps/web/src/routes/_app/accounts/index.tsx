@@ -4,6 +4,7 @@ import { CircleAlert, RotateCcw, Search, SearchX, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Empty } from '@/components/shared/Card';
+import { Segmented } from '@/components/shared/Segmented';
 import { AccountTile, ConfidentialBadge, HealthBadge } from '@/components/shared/Badges';
 import { CalendarDate, RelativeTime } from '@/components/shared/DateText';
 import { Alert } from '@/components/ui/alert';
@@ -94,35 +95,24 @@ function Accounts() {
               </button>
             )}
           </div>
-          <div
-            role="radiogroup"
-            aria-label="Health"
-            className="flex items-center gap-1 rounded-lg border border-border bg-surface p-0.5"
-          >
-            {HEALTH_FILTERS.map((value) => {
-              const active = value === health;
-              return (
-                <button
-                  key={value ?? 'all'}
-                  type="button"
-                  role="radio"
-                  aria-checked={active}
-                  onClick={() =>
-                    navigate({ search: (prev) => ({ ...prev, health: value ?? undefined }) })
-                  }
-                  className={cn(
-                    'flex h-7 items-center gap-1.5 rounded-md px-2.5 text-xs font-medium outline-none transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-ring/60',
-                    active
-                      ? 'bg-raised text-foreground shadow-[inset_0_0_0_1px_#33333c]'
-                      : 'text-muted-foreground hover:text-foreground',
-                  )}
-                >
-                  {value && <HealthDot health={value} />}
-                  {value ? HEALTH_LABELS[value] : 'All'}
-                </button>
-              );
-            })}
-          </div>
+          <Segmented
+            label="Health"
+            value={health}
+            onChange={(value) =>
+              navigate({ search: (prev) => ({ ...prev, health: value ?? undefined }) })
+            }
+            options={HEALTH_FILTERS.map((value) => ({
+              value,
+              label: value ? (
+                <>
+                  <HealthDot health={value} />
+                  {HEALTH_LABELS[value]}
+                </>
+              ) : (
+                'All'
+              ),
+            }))}
+          />
           {accounts.data && (
             <p className="ml-auto text-xs text-subtle tabular">
               {accounts.data.total} {accounts.data.total === 1 ? 'account' : 'accounts'}

@@ -54,13 +54,20 @@ export function relativeTime(iso: string, now = Date.now()) {
   return format(date, isSameYear(date, now) ? 'MMM d' : 'MMM d, yyyy');
 }
 
+// dateStyle cannot be combined with timeZoneName, so the fields are listed one by one.
+const fullDateTimeFormat = new Intl.DateTimeFormat('en-US', {
+  weekday: 'long',
+  month: 'long',
+  day: 'numeric',
+  year: 'numeric',
+  hour: 'numeric',
+  minute: '2-digit',
+  timeZoneName: 'short',
+});
+
 /** Full timestamp with the viewer's time zone, for tooltips. */
 export function fullDateTime(iso: string) {
-  return new Intl.DateTimeFormat('en-US', {
-    dateStyle: 'full',
-    timeStyle: 'short',
-    timeZoneName: 'short',
-  } as Intl.DateTimeFormatOptions).format(new Date(iso));
+  return fullDateTimeFormat.format(new Date(iso));
 }
 
 export function greeting(now = new Date()) {
