@@ -131,7 +131,9 @@ function Accounts() {
                   <th className="hidden h-10 px-3 font-medium @min-[720px]:table-cell">Owner</th>
                   <th className="hidden h-10 px-3 font-medium @min-[1000px]:table-cell">Segment</th>
                   <th className="h-10 px-3 font-medium">Health</th>
-                  <th className="hidden h-10 px-3 text-right font-medium @min-[480px]:table-cell">ARR</th>
+                  <th className="hidden h-10 px-3 text-right font-medium @min-[480px]:table-cell">
+                    ARR
+                  </th>
                   <th className="hidden h-10 px-3 font-medium @min-[600px]:table-cell">Renewal</th>
                   <th className="hidden h-10 px-4 text-right font-medium @min-[860px]:table-cell">
                     Last note
