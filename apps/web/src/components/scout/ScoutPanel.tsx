@@ -30,13 +30,22 @@ export function ScoutPanel() {
   const contentRef = useRef<HTMLDivElement>(null);
   const [pinned, setPinned] = useState(true);
   const pinnedRef = useRef(true);
+  const lastScrollTop = useRef(0);
 
+  function setPinnedBoth(value: boolean) {
+    pinnedRef.current = value;
+    setPinned(value);
+  }
+
+  // Scrolling up stops following; reaching the bottom starts again. Only an upward
+  // scroll unpins, so new content or a smooth scroll down never does.
   function onScroll() {
     const el = scrollRef.current;
     if (!el) return;
-    const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 48;
-    pinnedRef.current = atBottom;
-    setPinned(atBottom);
+    const scrolledUp = el.scrollTop < lastScrollTop.current;
+    lastScrollTop.current = el.scrollTop;
+    if (el.scrollHeight - el.scrollTop - el.clientHeight < 48) setPinnedBoth(true);
+    else if (scrolledUp) setPinnedBoth(false);
   }
 
   function scrollToBottom(behavior: ScrollBehavior) {
@@ -62,8 +71,7 @@ export function ScoutPanel() {
 
   // A different conversation opens at its latest message.
   useLayoutEffect(() => {
-    pinnedRef.current = true;
-    setPinned(true);
+    setPinnedBoth(true);
     scrollToBottom('auto');
   }, [threadId]);
 
@@ -142,7 +150,10 @@ export function ScoutPanel() {
         {!pinned && runs.length > 0 && (
           <button
             type="button"
-            onClick={() => scrollToBottom('smooth')}
+            onClick={() => {
+              setPinnedBoth(true);
+              scrollToBottom('smooth');
+            }}
             className="absolute bottom-3 left-1/2 flex h-7 -translate-x-1/2 items-center gap-1.5 rounded-full border border-border-strong bg-popover px-3 text-xs font-medium text-muted-foreground shadow-overlay outline-none transition-colors animate-in fade-in-0 slide-in-from-bottom-1 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/60"
           >
             <ArrowDown className="size-3.5" />

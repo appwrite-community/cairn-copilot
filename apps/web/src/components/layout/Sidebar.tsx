@@ -153,7 +153,22 @@ export function Sidebar({
         )}
       </div>
 
-      <div className={cn('mt-auto', collapsed ? 'flex justify-center' : '')}>
+      <div className={cn('mt-auto', collapsed && 'flex flex-col items-center gap-2')}>
+        {collapsed && onToggleCollapsed && (
+          <Tooltip
+            content={<ShortcutHint label="Expand sidebar" keys={[modKey, '\\']} />}
+            side="right"
+          >
+            <button
+              type="button"
+              onClick={onToggleCollapsed}
+              aria-label="Expand sidebar"
+              className="grid size-9 place-items-center rounded-md text-subtle outline-none transition-colors hover:bg-raised hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/60"
+            >
+              <PanelLeft className="size-4" />
+            </button>
+          </Tooltip>
+        )}
         <UserMenu collapsed={collapsed} />
       </div>
     </nav>
